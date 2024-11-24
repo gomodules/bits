@@ -57,12 +57,12 @@ func TestIsSet(t *testing.T) {
 	}
 }
 
-func TestSetNextAvailableBits(t *testing.T) {
+func TestAllocateNextAvailableBits(t *testing.T) {
 	// Test case 1: Normal operation with enough bits available
 	bf := NewBitField(10)
 	bf.SetBit(1)
 	bf.SetBit(3)
-	allocated, err := bf.SetNextAvailableBits(3)
+	allocated, err := bf.AllocateNextAvailableBits(3)
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
@@ -72,14 +72,14 @@ func TestSetNextAvailableBits(t *testing.T) {
 	}
 
 	// Test case 2: Insufficient available bits
-	_, err = bf.SetNextAvailableBits(8) // 8 bits requested when only 7 are left
+	_, err = bf.AllocateNextAvailableBits(8) // 8 bits requested when only 7 are left
 	if err == nil {
 		t.Fatal("Expected error due to insufficient available bits")
 	}
 
 	// Test case 3: Request for only one bit
 	bf.ClearBit(5)
-	allocated, err = bf.SetNextAvailableBits(1)
+	allocated, err = bf.AllocateNextAvailableBits(1)
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
@@ -90,7 +90,7 @@ func TestSetNextAvailableBits(t *testing.T) {
 
 	// Test case 4: Edge case with bitfield size of 1
 	bfSmall := NewBitField(1)
-	allocated, err = bfSmall.SetNextAvailableBits(1)
+	allocated, err = bfSmall.AllocateNextAvailableBits(1)
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
@@ -103,7 +103,7 @@ func TestSetNextAvailableBits(t *testing.T) {
 	}
 
 	// Test case 5: Out of range request for more bits than the size of bitfield
-	_, err = bfSmall.SetNextAvailableBits(2) // Only 1 bit is available in bfSmall
+	_, err = bfSmall.AllocateNextAvailableBits(2) // Only 1 bit is available in bfSmall
 	if err == nil {
 		t.Fatal("Expected error due to request exceeding bitfield size")
 	}
@@ -112,7 +112,7 @@ func TestSetNextAvailableBits(t *testing.T) {
 	bf = NewBitField(10)
 	bf.SetBit(2)
 	bf.SetBit(5)
-	allocated, err = bf.SetNextAvailableBits(3)
+	allocated, err = bf.AllocateNextAvailableBits(3)
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
@@ -125,21 +125,21 @@ func TestSetNextAvailableBits(t *testing.T) {
 	}
 }
 
-func TestSetNextAvailableBitsInvalidInput(t *testing.T) {
+func TestAllocateNextAvailableBitsInvalidInput(t *testing.T) {
 	bf := NewBitField(64)
 
 	// Test invalid input (e.g., n <= 0 or n > size)
-	_, err := bf.SetNextAvailableBits(0)
+	_, err := bf.AllocateNextAvailableBits(0)
 	if err == nil {
 		t.Errorf("Expected error for invalid bit count (0)")
 	}
 
-	_, err = bf.SetNextAvailableBits(-1)
+	_, err = bf.AllocateNextAvailableBits(-1)
 	if err == nil {
 		t.Errorf("Expected error for invalid bit count (-1)")
 	}
 
-	_, err = bf.SetNextAvailableBits(65)
+	_, err = bf.AllocateNextAvailableBits(65)
 	if err == nil {
 		t.Errorf("Expected error for bit count exceeding BitField size")
 	}
@@ -153,7 +153,7 @@ func TestNextAvailableBitsInRange(t *testing.T) {
 	bf.SetBit(7)
 
 	// Find the next 2 available bits in range [0, 5)
-	availableBits, err := bf.NextAvailableBitsInRange(0, 5, 2)
+	availableBits, err := bf.AllocateAvailableBitsInRange(0, 5, 2)
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
@@ -165,13 +165,13 @@ func TestNextAvailableBitsInRange(t *testing.T) {
 	}
 
 	// Test case 2: Range with fewer than required bits
-	_, err = bf.NextAvailableBitsInRange(0, 5, 4)
+	_, err = bf.AllocateAvailableBitsInRange(0, 5, 4)
 	if err == nil {
 		t.Fatal("Expected error due to insufficient consecutive bits")
 	}
 
 	// Test case 3: Sufficient bits in a later part of the range
-	availableBits, err = bf.NextAvailableBitsInRange(5, 10, 3)
+	availableBits, err = bf.AllocateAvailableBitsInRange(5, 10, 3)
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
@@ -186,26 +186,26 @@ func TestNextAvailableBitsInRange(t *testing.T) {
 	bf.SetBit(0)
 	bf.SetBit(2)
 	bf.SetBit(4)
-	_, err = bf.NextAvailableBitsInRange(0, 5, 2)
+	_, err = bf.AllocateAvailableBitsInRange(0, 5, 2)
 	if err == nil {
 		t.Fatal("Expected error due to lack of available consecutive bits")
 	}
 
 	// Test case 5: Out-of-bounds range
-	_, err = bf.NextAvailableBitsInRange(-1, 15, 2)
+	_, err = bf.AllocateAvailableBitsInRange(-1, 15, 2)
 	if err == nil {
 		t.Fatal("Expected error due to out-of-bounds range")
 	}
 
 	// Test case 6: Range where `n` is greater than available bits
-	_, err = bf.NextAvailableBitsInRange(0, 10, 11)
+	_, err = bf.AllocateAvailableBitsInRange(0, 10, 11)
 	if err == nil {
 		t.Fatal("Expected error due to requesting more bits than available in range")
 	}
 
 	// Test case 7: Requesting 1 available bit
 	bf.ClearBit(0)
-	availableBits, err = bf.NextAvailableBitsInRange(0, 10, 1)
+	availableBits, err = bf.AllocateAvailableBitsInRange(0, 10, 1)
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
